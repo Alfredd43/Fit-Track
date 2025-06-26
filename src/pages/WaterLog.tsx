@@ -166,7 +166,7 @@ const WaterLog = () => {
                 onChange={(e) => setUnit(e.target.value)}
                 className="px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
               >
-                <option value="ml">ml</option>
+                <option value="ml">ml</option
                 <option value="cups">cups</option>
               </select>
  </div>

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from "/home/runner/work/bab-buddy-bliss/bab-buddy-bliss/src/components/ui/button";
-import { Input } from "/home/runner/work/bab-buddy-bliss/bab-buddy-bliss/src/components/ui/input";
-import { Label } from "/home/runner/work/bab-buddy-bliss/bab-buddy-bliss/src/components/ui/label";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
 
 const Register: React.FC = () => {
   // State for form inputs
