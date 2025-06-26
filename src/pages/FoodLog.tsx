@@ -2,6 +2,12 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, Edit3 } from 'lucide-react';
 import Navigation from '../components/Navigation';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+
 
 interface FoodEntry {
   id: string;
@@ -109,22 +115,26 @@ const FoodLog = () => {
         {/* Add Food Button */}
         <div className="mb-6 text-center">
           <button
-            onClick={() => setShowForm(!showForm)}
-            className="bg-gradient-to-r from-orange-400 to-orange-500 text-white px-6 py-3 rounded-xl hover:from-orange-500 hover:to-orange-600 transition-all duration-200 flex items-center space-x-2 mx-auto shadow-lg"
+ onClick={() => setShowForm(!showForm)}
+ className="bg-gradient-to-r from-orange-400 to-orange-500 text-white px-6 py-3 rounded-xl hover:from-orange-500 hover:to-orange-600 transition-all duration-200 flex items-center space-x-2 mx-auto shadow-lg"
           >
             <Plus className="w-5 h-5" />
             <span>Add Food Entry</span>
           </button>
         </div>
 
-        {/* Food Entry Form */}
+ {/* Food Entry Form */}
         {showForm && (
-          <div className="bg-white rounded-2xl shadow-lg border border-orange-100 p-6 mb-6 animate-fade-in">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Food Name</label>
-                  <input
+ <Card className="mb-6 animate-fade-in">
+ <CardHeader>
+ <CardTitle>Add New Food Entry</CardTitle>
+ </CardHeader>
+ <CardContent>
+ <form onSubmit={handleSubmit} className="space-y-4">
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+ <div>
+ <Label htmlFor="foodName">Food Name</Label>
+ <Input
                     type="text"
                     value={newFood.name}
                     onChange={(e) => setNewFood({ ...newFood, name: e.target.value })}
@@ -133,9 +143,9 @@ const FoodLog = () => {
                   // Removed required to allow sending just the name for AI parsing
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
-                  <input
+ <div>
+ <Label htmlFor="quantity">Quantity</Label>
+ <Input
                     type="text"
                     value={newFood.quantity}
                     onChange={(e) => setNewFood({ ...newFood, quantity: e.target.value })}
@@ -148,8 +158,8 @@ const FoodLog = () => {
               
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Calories</label>
-                  <input
+ <Label htmlFor="calories">Calories</Label>
+ <Input
                     type="number"
                     value={newFood.calories}
                     onChange={(e) => setNewFood({ ...newFood, calories: e.target.value })}
@@ -159,8 +169,8 @@ const FoodLog = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Protein (g)</label>
-                  <input
+ <Label htmlFor="protein">Protein (g)</Label>
+ <Input
                     type="number"
                     value={newFood.protein}
                     onChange={(e) => setNewFood({ ...newFood, protein: e.target.value })}
@@ -169,8 +179,8 @@ const FoodLog = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Carbs (g)</label>
-                  <input
+ <Label htmlFor="carbs">Carbs (g)</Label>
+ <Input
                     type="number"
                     value={newFood.carbs}
                     onChange={(e) => setNewFood({ ...newFood, carbs: e.target.value })}
@@ -179,8 +189,8 @@ const FoodLog = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Fat (g)</label>
-                  <input
+ <Label htmlFor="fat">Fat (g)</Label>
+ <Input
                     type="number"
                     value={newFood.fat}
                     onChange={(e) => setNewFood({ ...newFood, fat: e.target.value })}
@@ -192,25 +202,26 @@ const FoodLog = () => {
               
               <div className="flex space-x-3">
                 <button
-                  type="submit"
-                  className="flex-1 bg-gradient-to-r from-orange-400 to-orange-500 text-white py-3 rounded-xl hover:from-orange-500 hover:to-orange-600 transition-all duration-200 font-medium"
-                  disabled={loading} // Disable button while loading
-                  >
+ type="submit"
+ className="flex-1 bg-gradient-to-r from-orange-400 to-orange-500 text-white py-3 rounded-xl hover:from-orange-500 hover:to-orange-600 transition-all duration-200 font-medium"
+ disabled={loading} // Disable button while loading
+ >
                   Add to Journal
                 </button>
                 <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="px-6 py-3 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-all duration-200"
-                >
+ type="button"
+ onClick={() => setShowForm(false)}
+ className="px-6 py-3 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-all duration-200"
+ >
                   Cancel
                 </button>
               </div>
             </form>
-          </div>
+ </CardContent>
+ </Card>
         )}
 
-        {/* Food Entries */}
+ {/* Food Entries */}
         <div className="space-y-4">
           {foodEntries.map((entry) => (
             <div key={entry.id} className="bg-white rounded-2xl shadow-lg border border-orange-100 p-6">

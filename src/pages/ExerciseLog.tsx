@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { Plus, Clock, Zap, Trash2 } from 'lucide-react';
 import Navigation from '../components/Navigation';
 import { API_BASE_URL } from '../config'; // Assuming you have a config file for the API base URL
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 interface ExerciseEntry {
   id: string;
@@ -99,45 +101,6 @@ const ExerciseLog = () => {
 
   };
 
-  // This function might need to be updated to call a backend delete endpoint
-  const deleteExercise = (id: string) => {
-    setExercises(exercises.filter(ex => ex.id !== id));
-  };
-
-  const totalDuration = exercises.reduce((sum, ex) => sum + ex.duration, 0);
-  // const totalCalories = exercises.reduce((sum, ex) => sum + (ex.calories || 0), 0); // Calories will come from backend if calculated
-  const totalCalories = 0; // Placeholder until backend calculates/returns calories
-
-  const getIntensityColor = (intensity: string) => {
-    switch (intensity) {
-      case 'low': return 'bg-green-100 text-green-700';
-      case 'moderate': return 'bg-yellow-100 text-yellow-700';
-      case 'high': return 'bg-red-100 text-red-700';
-      default: return 'bg-gray-100 text-gray-700';
-    }
-  };
-
-  const quickWorkouts = [
-    { name: '5-min Stretch', duration: 5, intensity: 'low' as const },
-    { name: '15-min Walk', duration: 15, intensity: 'moderate' as const },
-    { name: '10-min HIIT', duration: 10, intensity: 'high' as const }
-  ];
-
-  // This function might need to be updated to use the backend endpoint
-  const addQuickWorkout = (workout: typeof quickWorkouts[0]) => {
-    const entry: ExerciseEntry = {
-      id: Date.now().toString(), // Temporary ID for local display
-      type: workout.name,
-      duration: workout.duration,
-      intensity: workout.intensity,
-      calories: newExercise.calories ? Number(newExercise.calories) : undefined,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-    
-    setExercises([...exercises, entry]);
-    setNewExercise({ type: '', duration: '', intensity: 'moderate', calories: '' });
-    setShowForm(false);
-  };
 
   const totalDuration = exercises.reduce((sum, ex) => sum + ex.duration, 0);
   const totalCalories = exercises.reduce((sum, ex) => sum + (ex.calories || 0), 0);
@@ -157,12 +120,18 @@ const ExerciseLog = () => {
     { name: '10-min HIIT', duration: 10, intensity: 'high' as const }
   ];
 
+  // This function might need to be updated to call a backend delete endpoint
+  const deleteExercise = (id: string) => {
+    setExercises(exercises.filter(ex => ex.id !== id));
+  };
+
   const addQuickWorkout = (workout: typeof quickWorkouts[0]) => {
     const entry: ExerciseEntry = {
       id: Date.now().toString(),
       type: workout.name,
       duration: workout.duration,
       intensity: workout.intensity,
+      calories: undefined, // Calories will come from backend if available later
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
     setExercises([...exercises, entry]);
@@ -216,6 +185,7 @@ const ExerciseLog = () => {
         {/* Add Exercise Button */}
         <div className="mb-6 text-center">
           <button
+            type="button"
             onClick={() => setShowForm(!showForm)}
             className="bg-gradient-to-r from-purple-400 to-purple-500 text-white px-6 py-3 rounded-xl hover:from-purple-500 hover:to-purple-600 transition-all duration-200 flex items-center space-x-2 mx-auto shadow-lg"
           >
@@ -223,10 +193,8 @@ const ExerciseLog = () => {
             <span>Log Custom Exercise</span>
           </button>
         </div>
-
         {/* Exercise Form */}
-        {showForm && (
-          <div className="bg-white rounded-2xl shadow-lg border border-purple-100 p-6 mb-6 animate-fade-in">
+        {showForm && (<div className="bg-white rounded-2xl shadow-lg border border-purple-100 p-6 mb-6 animate-fade-in">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -235,7 +203,7 @@ const ExerciseLog = () => {
                     type="text"
                     value={newExercise.type}
                     onChange={(e) => setNewExercise({ ...newExercise, type: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400"
+                    className="w-full"
                     placeholder="e.g., Running, Yoga, Weight Lifting"
                     required
                   />
@@ -246,7 +214,7 @@ const ExerciseLog = () => {
                     type="number"
                     value={newExercise.duration}
                     onChange={(e) => setNewExercise({ ...newExercise, duration: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400"
+                    className="w-full"
                     placeholder="30"
                     min="1"
                     required
@@ -260,7 +228,7 @@ const ExerciseLog = () => {
                   <select
                     value={newExercise.intensity}
                     onChange={(e) => setNewExercise({ ...newExercise, intensity: e.target.value as 'low' | 'moderate' | 'high' })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400" // Added some minimal styling for select
                   >
                     <option value="low">Low</option>
                     <option value="moderate">Moderate</option>
@@ -273,7 +241,7 @@ const ExerciseLog = () => {
                     type="number"
                     value={newExercise.calories}
                     onChange={(e) => setNewExercise({ ...newExercise, calories: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400"
+                    className="w-full"
                     placeholder="150"
                     min="0"
                   />
@@ -283,14 +251,14 @@ const ExerciseLog = () => {
               <div className="flex space-x-3">
                 <button
                   type="submit"
-                  className="flex-1 bg-gradient-to-r from-purple-400 to-purple-500 text-white py-3 rounded-xl hover:from-purple-500 hover:to-purple-600 transition-all duration-200 font-medium"
+                  className="flex-1" // Using Button component will handle styling
                 >
                   Log Exercise
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="px-6 py-3 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-all duration-200"
+                  variant="outline" // Assuming 'outline' variant exists for your Button component
                 >
                   Cancel
                 </button>
@@ -298,8 +266,7 @@ const ExerciseLog = () => {
             </form>
           </div>
         )}
-
-        {/* Exercise Entries */}
+        {/* Exercise Entries */}{/* Existing styling with divs will remain for now */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-gray-800">Today's Activities</h3>
           {exercises.map((exercise) => (

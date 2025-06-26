@@ -1,7 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
 import Navigation from '../components/Navigation';
-import QuickActions from '../components/QuickActions';
 import WellnessStats from '../components/WellnessStats';
 import MotivationalBanner from '../components/MotivationalBanner';
 import ChatInterface from '../components/ChatInterface';
@@ -10,6 +9,8 @@ import PageHeader from '../components/PageHeader';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 
+import { Button } from "../components/ui/button";
+import { Plus } from "lucide-react";
 
 const Index = () => {
   const [logs, setLogs] = useState<any>(null);
@@ -94,7 +95,22 @@ const Index = () => {
           totalWater={totalWater}
           totalExerciseDuration={totalExerciseDuration}
         />
-        <QuickActions />
+
+        {/* Quick Actions Section - Refactored */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent className="flex space-x-4">
+            {/* These buttons will likely navigate or open modals */}
+            <Button variant="outline" onClick={() => alert("Log Food Action")}>
+              <Plus className="mr-2 h-4 w-4" /> Log Food
+            </Button>
+            <Button variant="outline" onClick={() => alert("Log Water Action")}>
+              <Plus className="mr-2 h-4 w-4" /> Log Water
+            </Button>
+          </CardContent>
+        </Card>
         <ChatInterface />
 
         {logs && (

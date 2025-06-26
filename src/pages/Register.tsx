@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Button } from "/home/runner/work/bab-buddy-bliss/bab-buddy-bliss/src/components/ui/button";
+import { Input } from "/home/runner/work/bab-buddy-bliss/bab-buddy-bliss/src/components/ui/input";
+import { Label } from "/home/runner/work/bab-buddy-bliss/bab-buddy-bliss/src/components/ui/label";
 
 const Register: React.FC = () => {
+  // State for form inputs
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,7 +21,8 @@ const Register: React.FC = () => {
     };
 
     try {
-      const response = await fetch('/register', {
+      // Assuming your backend is running locally on port 5000, adjust the URL if needed
+      const response = await fetch('http://localhost:5000/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -27,6 +32,7 @@ const Register: React.FC = () => {
 
       const data = await response.json();
 
+      // Check if the response was successful
       if (response.ok) {
         console.log('Registration successful:', data);
         // Redirect to login page on successful registration
@@ -44,41 +50,46 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div>
-      <h2>Register</h2>
-      <form onSubmit={handleSubmit}>
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded shadow-md">
+        <h2 className="text-2xl font-bold text-center">Register</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Name</Label>
+            <Input
+              id="name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <Button type="submit" className="w-full">Register</Button>
+        </form>
         <div>
-          <label htmlFor="name">Name:</label>
-          <input
-            type="text"
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
+          <p className="text-center text-sm text-gray-600">Already have an account? <a href="/login" className="text-blue-500 hover:underline">Login here</a>.</p>
         </div>
-        <div>
-          <label htmlFor="email">Email:</label>
-          <input
-            type="email"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="password">Password:</label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit">Register</button>
-      </form>
+      </div>
     </div>
   );
 };

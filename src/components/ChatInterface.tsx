@@ -3,6 +3,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Send, User, Bot } from 'lucide-react';
 
 interface Message {
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
   id: string;
   content: string;
   sender: 'user' | 'bot';
@@ -175,23 +177,22 @@ const ChatInterface = () => {
 
       {/* Input */}
       <div className="p-6 border-t border-gray-100">
-        <div className="flex space-x-3">
-          <input
+        <div className="flex items-center space-x-3">
+          <Input
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
             placeholder="Share what's on your mind..."
-            className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
+            onKeyPress={handleKeyPress} // Keep key press handling on Input
           />
-          <button
+          <Button
             onClick={handleSendMessage}
             disabled={!inputMessage.trim() || isTyping}
             className="px-6 py-3 bg-gradient-to-r from-green-400 to-green-500 text-white rounded-xl hover:from-green-500 hover:to-green-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-          >
+          variant="outline"> {/* Assuming you have a suitable button variant */}
             <Send className="w-4 h-4" />
             <span>Send</span>
-          </button>
+          </Button>
         </div>
         <p className="text-xs text-gray-500 mt-2 text-center">
           Press Enter to send • Your wellness companion is here to listen 💚

@@ -8,8 +8,9 @@ from dotenv import load_dotenv
 import openai
 import json
 import secrets
-load_dotenv()
+from functools import wraps
 
+load_dotenv()
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
@@ -18,13 +19,6 @@ CORS(app)
 
 @app.route('/')
 def index():
-    # Initialize OpenAI client
-    openai.api_key = os.getenv("OPENAI_API_KEY")
-    # Create database tables if they don't exist
-    with app.app_context():
-        db.create_all()
-    
-
     return "Fitness Bab Backend Running!"
 
 class User(db.Model):
@@ -88,6 +82,7 @@ def token_required(f):
         kwargs['user_id'] = tokens[token]
         return f(*args, **kwargs)
 
+    return decorated # This return was missing
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -100,51 +95,44 @@ def register():
 
 @app.route('/login', methods=['POST'])
 def login():
-    from functools import wraps
     data = request.get_json()
     user = User.query.filter_by(email=data['email']).first()
 
-    if not user:
+    if not user or not check_password_hash(user.password, data['password']):
         return jsonify({'message': 'Invalid credentials!'}), 401
 
-    if check_password_hash(user.password, data['password']):
-        # TODO: Implement token generation
-        return jsonify({'message': 'Login successful!'})
-    else:
-        return jsonify({'message': 'Invalid credentials!'}), 401
+    token = secrets.token_hex(16)
+    tokens[token] = user.id
+    return jsonify({'token': token, 'user_id': user.id})
 
 
 @app.route('/log/food', methods=['POST'])
 @token_required
-def add_food_log():
+def log_food(user_id):
     data = request.get_json()
-    from functools import wraps
-    user_id = data['user_id']
-    food_item = data['food_item']
+    food_item = data.get('food_item')
+
+    if not food_item:
+        return jsonify({'message': 'Food item is required'}), 400
 
     nutrition_info = extract_nutrition_info(food_item)
 
-    calories = nutrition_info.get('calories')
-    macros_dict = {
-        'protein': nutrition_info.get('protein'),
-        'carbs': nutrition_info.get('carbs'),
-        'fats': nutrition_info.get('fats')
-    }
-    macros = json.dumps(macros_dict) if any(macros_dict.values()) else None
-
-    new_food_log = FoodLog(user_id=user_id, food_item=food_item, calories=calories, macros=macros)
+    new_food_log = FoodLog(
+        user_id=user_id,
+        food_item=food_item,
+        calories=nutrition_info.get('calories'),
+        macros=json.dumps({k: v for k, v in nutrition_info.items() if k != 'calories'})
+    )
     db.session.add(new_food_log)
-db.session.commit()
+    db.session.commit()
 
- return jsonify({'message': 'Food log added successfully!', 'nutrition_info': nutrition_info})
+    return jsonify({'message': 'Food log added successfully!', 'nutrition_info': nutrition_info})
 
 
 @app.route('/log/water', methods=['POST'])
-def add_water_log():
 @token_required
-def add_water_log():
+def add_water_log(user_id):
     data = request.get_json()
-    user_id = data['user_id']
     volume = data['volume']
 
     new_water_log = WaterLog(user_id=user_id, volume=volume)
@@ -155,9 +143,8 @@ def add_water_log():
 
 @app.route('/log/exercise', methods=['POST'])
 @token_required
-def add_exercise_log():
+def add_exercise_log(user_id):
     data = request.get_json()
-    user_id = data['user_id']
     exercise_type = data['exercise_type']
     duration = data['duration']
     intensity = data.get('intensity') # Intensity is optional
@@ -170,8 +157,7 @@ def add_exercise_log():
 
 @app.route('/logs', methods=['GET'])
 @token_required
-def get_logs():
-    user_id = request.args.get('user_id') # Get user_id from query parameters
+def get_logs(user_id):
     food_logs = FoodLog.query.filter_by(user_id=user_id).all()
     water_logs = WaterLog.query.filter_by(user_id=user_id).all()
     exercise_logs = ExerciseLog.query.filter_by(user_id=user_id).all()
@@ -201,9 +187,8 @@ def extract_nutrition_info(food_item):
 
 @app.route('/chat', methods=['POST'])
 @token_required
-def chat_with_ai():
+def chat_with_ai(user_id):
     data = request.get_json()
-    user_id = data['user_id']
     user_message = data['user_message']
 
     try:
@@ -227,8 +212,7 @@ def chat_with_ai():
 
 @app.route('/chat/history', methods=['GET'])
 @token_required
-def get_chat_history():
-    user_id = request.args.get('user_id')
+def get_chat_history(user_id):
     chat_history = AIInteraction.query.filter_by(user_id=user_id).order_by(AIInteraction.timestamp).all()
 
     # Format chat history for JSON response
@@ -236,4 +220,7 @@ def get_chat_history():
     return jsonify({'chat_history': history_list})
 
 if __name__ == '__main__':
+    openai.api_key = os.getenv("OPENAI_API_KEY")
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)
