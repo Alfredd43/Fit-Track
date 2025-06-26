@@ -1,7 +1,9 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, User, Bot } from 'lucide-react';
 import Navigation from '../components/Navigation';
+import QuickActions from '../components/QuickActions';
+import WellnessStats from '../components/WellnessStats';
+import MotivationalBanner from '../components/MotivationalBanner';
 
 interface Message {
   id: string;
@@ -98,6 +100,15 @@ const Index = () => {
           <p className="text-gray-600">Your caring wellness companion is here to listen and support you!</p>
         </div>
 
+        {/* Motivational Banner */}
+        <MotivationalBanner />
+
+        {/* Wellness Stats */}
+        <WellnessStats />
+
+        {/* Quick Actions */}
+        <QuickActions />
+
         {/* Chat Interface */}
         <div className="bg-white rounded-2xl shadow-lg border border-green-100 max-w-3xl mx-auto">
           {/* Chat Header */}
@@ -190,32 +201,37 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Quick Start Cards */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
-          <div className="bg-white rounded-xl shadow-lg border border-orange-100 p-4 text-center">
-            <div className="text-2xl mb-2">🥗</div>
-            <h3 className="font-semibold text-gray-800">Track Nutrition</h3>
-            <p className="text-sm text-gray-600 mt-1">Log your meals and track your daily nutrition</p>
+        {/* Enhanced Tips Section */}
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          <div className="bg-white rounded-xl shadow-lg border border-orange-100 p-6">
+            <div className="text-3xl mb-3">🎯</div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Daily Goals</h3>
+            <p className="text-sm text-gray-600 mb-4">Set small, achievable goals and build momentum!</p>
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                <span className="text-sm text-gray-700">Drink 8 glasses of water</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                <span className="text-sm text-gray-700">Take a 10-minute walk</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                <span className="text-sm text-gray-700">Practice mindfulness</span>
+              </div>
+            </div>
           </div>
-          <div className="bg-white rounded-xl shadow-lg border border-blue-100 p-4 text-center">
-            <div className="text-2xl mb-2">🚰</div>
-            <h3 className="font-semibold text-gray-800">Stay Hydrated</h3>
-            <p className="text-sm text-gray-600 mt-1">Monitor your water intake throughout the day</p>
-          </div>
-          <div className="bg-white rounded-xl shadow-lg border border-purple-100 p-4 text-center">
-            <div className="text-2xl mb-2">🏋️</div>
-            <h3 className="font-semibold text-gray-800">Log Workouts</h3>
-            <p className="text-sm text-gray-600 mt-1">Record your exercises and track your progress</p>
-          </div>
-        </div>
-
-        {/* Motivational Quote */}
-        <div className="mt-8 bg-gradient-to-r from-green-400 to-green-500 rounded-2xl shadow-lg p-6 text-white text-center max-w-3xl mx-auto">
-          <div className="text-center">
-            <p className="text-lg font-medium mb-2">✨ Daily Motivation ✨</p>
-            <p className="text-sm opacity-90">
-              "Every conversation brings you closer to your wellness goals. I'm here for you every step of the way!"
-            </p>
+          
+          <div className="bg-white rounded-xl shadow-lg border border-green-100 p-6">
+            <div className="text-3xl mb-3">💝</div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Self-Care Reminder</h3>
+            <p className="text-sm text-gray-600 mb-4">Remember to be gentle with yourself today!</p>
+            <div className="bg-green-50 rounded-lg p-3">
+              <p className="text-sm text-green-700 font-medium">
+                "You are worthy of love and care - especially from yourself. 💚"
+              </p>
+            </div>
           </div>
         </div>
       </div>
