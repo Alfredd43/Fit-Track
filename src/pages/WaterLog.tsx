@@ -20,19 +20,37 @@ const WaterLog = () => {
   const [unit, setUnit] = useState('ml');
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newAmount) return;
+ e.preventDefault();
+ if (!newAmount) return;
 
-    const amountInMl = unit === 'cups' ? Number(newAmount) * 240 : Number(newAmount);
-    
-    const entry: WaterEntry = {
-      id: Date.now().toString(),
-      amount: amountInMl,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-    
-    setWaterEntries([...waterEntries, entry]);
-    setNewAmount('');
+ const amountInMl = unit === 'cups' ? Number(newAmount) * 240 : Number(newAmount);
+
+ // Get user ID and token from local storage (or your state management)
+ const userId = localStorage.getItem('userId'); // Replace with your actual way of getting user ID
+ const token = localStorage.getItem('token'); // Replace with your actual way of getting the token
+
+ if (!userId || !token) {
+ console.error('User not logged in or token not found');
+ // Handle the case where the user is not logged in
+ return;
+ }
+
+ fetch('/log/water', {
+ method: 'POST',
+ headers: {
+ 'Content-Type': 'application/json',
+ 'Authorization': `Bearer ${token}`, // Include the token
+ },
+ body: JSON.stringify({ user_id: userId, volume: amountInMl }),
+ })
+ .then(response => response.json())
+ .then(data => {
+ // Optionally update local state or refetch logs to show the new entry
+ console.log('Water logged successfully:', data);
+ })
+ .catch(error => console.error('Error logging water:', error));
+
+ setNewAmount(''); // Clear the form
   };
 
   const totalWater = waterEntries.reduce((sum, entry) => sum + entry.amount, 0);
@@ -42,12 +60,30 @@ const WaterLog = () => {
   const quickAmounts = [250, 500, 750];
 
   const addQuickAmount = (amount: number) => {
-    const entry: WaterEntry = {
-      id: Date.now().toString(),
-      amount,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-    setWaterEntries([...waterEntries, entry]);
+ // Get user ID and token from local storage (or your state management)
+ const userId = localStorage.getItem('userId'); // Replace with your actual way of getting user ID
+ const token = localStorage.getItem('token'); // Replace with your actual way of getting the token
+
+ if (!userId || !token) {
+ console.error('User not logged in or token not found');
+ // Handle the case where the user is not logged in
+ return;
+ }
+
+ fetch('/log/water', {
+ method: 'POST',
+ headers: {
+ 'Content-Type': 'application/json',
+ 'Authorization': `Bearer ${token}`, // Include the token
+ },
+ body: JSON.stringify({ user_id: userId, volume: amount }),
+ })
+ .then(response => response.json())
+ .then(data => {
+ // Optionally update local state or refetch logs to show the new entry
+ console.log('Quick water logged successfully:', data);
+ })
+ .catch(error => console.error('Error logging quick water:', error));
   };
 
   return (

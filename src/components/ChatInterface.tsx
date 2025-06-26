@@ -11,12 +11,7 @@ interface Message {
 
 const ChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      content: "Hey there! I'm your Fitness Buddy 💪 I'm here to support you on your wellness journey. How are you feeling today?",
-      sender: 'bot',
-      timestamp: new Date()
-    }
+    // Initial message from the bot or fetched history
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -30,6 +25,31 @@ const ChatInterface = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    // Fetch chat history when the component mounts
+    const fetchChatHistory = async () => {
+      const userId = localStorage.getItem('user_id'); // Or get from state management
+      const token = localStorage.getItem('token'); // Or get from state management
+
+      if (!userId || !token) {
+        // Handle not logged in
+        return;
+      }
+
+      try {
+        const response = await fetch(`/chat/history?user_id=${userId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        const data = await response.json();
+        setMessages(data.history.map((msg: any) => ({ ...msg, timestamp: new Date(msg.timestamp) })));
+      } catch (error) {
+        console.error('Failed to fetch chat history:', error);
+      }
+    };
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
@@ -45,38 +65,39 @@ const ChatInterface = () => {
     setInputMessage('');
     setIsTyping(true);
 
-    // Simulate API call to /chat
+    const userId = localStorage.getItem('user_id'); // Or get from state management
+    const token = localStorage.getItem('token'); // Or get from state management
+
+    if (!userId || !token) {
+      // Handle not logged in
+      setIsTyping(false);
+      return;
+    }
+
     try {
-      // Simulate loading delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      const response = await fetch('/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ user_id: userId, user_message: inputMessage })
+      });
+
+      const data = await response.json();
+
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
-        content: generateBotResponse(inputMessage),
+        content: data.ai_reply,
         sender: 'bot',
         timestamp: new Date()
       };
-
       setMessages(prev => [...prev, botResponse]);
     } catch (error) {
       console.error('Failed to send message:', error);
     } finally {
       setIsTyping(false);
     }
-  };
-
-  const generateBotResponse = (userMessage: string): string => {
-    const responses = [
-      "That's wonderful! Keep up the great work! 🌟 Remember, every small step counts toward your wellness goals.",
-      "I'm so proud of your dedication! 💚 What would you like to focus on next in your wellness journey?",
-      "You're doing amazing! ✨ How about we set a small goal for tomorrow to keep the momentum going?",
-      "I love your positive energy! 🌸 Remember to celebrate these victories, no matter how small they seem.",
-      "That sounds like a great approach! 🎯 I'm here to support you every step of the way.",
-      "Your commitment to wellness is inspiring! 🌱 Have you been staying hydrated today?",
-      "I believe in you! 💪 Small consistent actions lead to big transformations.",
-      "That's the spirit! 🎉 Remember, progress over perfection always wins the day."
-    ];
-    return responses[Math.floor(Math.random() * responses.length)];
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

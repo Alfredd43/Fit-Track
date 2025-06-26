@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Plus, Clock, Zap, Trash2 } from 'lucide-react';
 import Navigation from '../components/Navigation';
+import { API_BASE_URL } from '../config'; // Assuming you have a config file for the API base URL
 
 interface ExerciseEntry {
   id: string;
@@ -43,12 +44,92 @@ const ExerciseLog = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const entry: ExerciseEntry = {
-      id: Date.now().toString(),
+
+    // Assuming user ID and token are stored in localStorage after login
+    const userId = localStorage.getItem('userId');
+    const token = localStorage.getItem('token');
+
+    if (!userId || !token) {
+      console.error('User not logged in');
+      // Redirect to login or show an error
+      return;
+    }
+
+    const exerciseData = {
+      user_id: userId,
       type: newExercise.type,
       duration: Number(newExercise.duration),
       intensity: newExercise.intensity,
+      // calories: newExercise.calories ? Number(newExercise.calories) : undefined, // Calories handled by backend for now
+    };
+
+    fetch(`${API_BASE_URL}/log/exercise`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(exerciseData),
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'succeeded') {
+          // Optionally fetch updated logs after successful submission
+          // For now, we'll just clear the form and potentially add a local entry for immediate feedback
+          const entry: ExerciseEntry = {
+            id: Date.now().toString(), // Temporary ID for local display
+            type: newExercise.type,
+            duration: Number(newExercise.duration),
+            intensity: newExercise.intensity,
+            calories: undefined, // Calories will come from backend if available later
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+          setExercises([...exercises, entry]);
+          setNewExercise({ type: '', duration: '', intensity: 'moderate', calories: '' });
+          setShowForm(false);
+        } else {
+          console.error('Error logging exercise:', data.message);
+          // Show an error message to the user
+        }
+      })
+      .catch(error => {
+        console.error('Error logging exercise:', error);
+        // Show an error message to the user
+      });
+
+  };
+
+  // This function might need to be updated to call a backend delete endpoint
+  const deleteExercise = (id: string) => {
+    setExercises(exercises.filter(ex => ex.id !== id));
+  };
+
+  const totalDuration = exercises.reduce((sum, ex) => sum + ex.duration, 0);
+  // const totalCalories = exercises.reduce((sum, ex) => sum + (ex.calories || 0), 0); // Calories will come from backend if calculated
+  const totalCalories = 0; // Placeholder until backend calculates/returns calories
+
+  const getIntensityColor = (intensity: string) => {
+    switch (intensity) {
+      case 'low': return 'bg-green-100 text-green-700';
+      case 'moderate': return 'bg-yellow-100 text-yellow-700';
+      case 'high': return 'bg-red-100 text-red-700';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  const quickWorkouts = [
+    { name: '5-min Stretch', duration: 5, intensity: 'low' as const },
+    { name: '15-min Walk', duration: 15, intensity: 'moderate' as const },
+    { name: '10-min HIIT', duration: 10, intensity: 'high' as const }
+  ];
+
+  // This function might need to be updated to use the backend endpoint
+  const addQuickWorkout = (workout: typeof quickWorkouts[0]) => {
+    const entry: ExerciseEntry = {
+      id: Date.now().toString(), // Temporary ID for local display
+      type: workout.name,
+      duration: workout.duration,
+      intensity: workout.intensity,
       calories: newExercise.calories ? Number(newExercise.calories) : undefined,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
@@ -56,10 +137,6 @@ const ExerciseLog = () => {
     setExercises([...exercises, entry]);
     setNewExercise({ type: '', duration: '', intensity: 'moderate', calories: '' });
     setShowForm(false);
-  };
-
-  const deleteExercise = (id: string) => {
-    setExercises(exercises.filter(ex => ex.id !== id));
   };
 
   const totalDuration = exercises.reduce((sum, ex) => sum + ex.duration, 0);

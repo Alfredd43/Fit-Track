@@ -15,6 +15,8 @@ interface FoodEntry {
 }
 
 const FoodLog = () => {
+  const userId = localStorage.getItem('userId'); // Get user ID from storage
+  const token = localStorage.getItem('token'); // Get token from storage
   const [foodEntries, setFoodEntries] = useState<FoodEntry[]>([
     {
       id: '1',
@@ -47,22 +49,38 @@ const FoodLog = () => {
     fat: ''
   });
 
+  const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const entry: FoodEntry = {
-      id: Date.now().toString(),
-      name: newFood.name,
-      quantity: newFood.quantity,
-      calories: Number(newFood.calories),
-      protein: Number(newFood.protein),
-      carbs: Number(newFood.carbs),
-      fat: Number(newFood.fat),
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-    
-    setFoodEntries([...foodEntries, entry]);
+    setLoading(true);
+    try {
+      const response = await fetch('/log/food', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, // Include token in headers
+        },
+        body: JSON.stringify({
+          user_id: userId, // Include user ID
+          food_item: `${newFood.quantity} of ${newFood.name}`, // Send a descriptive string
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Optionally fetch and update the logs after adding a new entry
+        // For simplicity, we'll clear the form and hide it for now
+        console.log('Food log added:', data);
+      } else {
+        console.error('Error adding food log:', data.message);
+      }
+    } catch (error) {
+      console.error('Error submitting food log:', error);
+    }
+    setLoading(false);
     setNewFood({ name: '', quantity: '', calories: '', protein: '', carbs: '', fat: '' });
     setShowForm(false);
   };
@@ -111,8 +129,8 @@ const FoodLog = () => {
                     value={newFood.name}
                     onChange={(e) => setNewFood({ ...newFood, name: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400"
-                    placeholder="What did you eat?"
-                    required
+                    placeholder="e.g., Grilled chicken breast"
+                  // Removed required to allow sending just the name for AI parsing
                   />
                 </div>
                 <div>
@@ -123,7 +141,7 @@ const FoodLog = () => {
                     onChange={(e) => setNewFood({ ...newFood, quantity: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400"
                     placeholder="e.g., 1 cup, 2 slices"
-                    required
+                  // Removed required
                   />
                 </div>
               </div>
@@ -137,7 +155,7 @@ const FoodLog = () => {
                     onChange={(e) => setNewFood({ ...newFood, calories: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400"
                     placeholder="0"
-                    required
+                  // Removed required, backend will get from AI
                   />
                 </div>
                 <div>
@@ -176,7 +194,8 @@ const FoodLog = () => {
                 <button
                   type="submit"
                   className="flex-1 bg-gradient-to-r from-orange-400 to-orange-500 text-white py-3 rounded-xl hover:from-orange-500 hover:to-orange-600 transition-all duration-200 font-medium"
-                >
+                  disabled={loading} // Disable button while loading
+                  >
                   Add to Journal
                 </button>
                 <button
