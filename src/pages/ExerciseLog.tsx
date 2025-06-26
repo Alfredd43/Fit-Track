@@ -1,109 +1,100 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Clock, Zap, Trash2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import Navigation from '../components/Navigation';
 import { API_BASE_URL } from '../config'; // Assuming you have a config file for the API base URL
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface ExerciseEntry {
   id: string;
-  type: string;
+  exercise_type: string;
   duration: number;
-  intensity: 'low' | 'moderate' | 'high';
-  calories?: number;
-  time: string;
+  intensity: string;
+  calories_burnt: number;
+  timestamp: string;
 }
 
 const ExerciseLog = () => {
-  const [exercises, setExercises] = useState<ExerciseEntry[]>([
-    {
-      id: '1',
-      type: 'Morning Yoga',
-      duration: 30,
-      intensity: 'low',
-      calories: 120,
-      time: '7:00 AM'
-    },
-    {
-      id: '2',
-      type: 'Evening Walk',
-      duration: 45,
-      intensity: 'moderate',
-      calories: 200,
-      time: '6:30 PM'
-    }
-  ]);
+  const userId = localStorage.getItem('user_id');
+  const token = localStorage.getItem('token');
+  const [exerciseEntries, setExerciseEntries] = useState<ExerciseEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [newExercise, setNewExercise] = useState({
     type: '',
     duration: '',
-    intensity: 'moderate' as 'low' | 'moderate' | 'high',
-    calories: ''
+    intensity: 'moderate',
   });
-
   const [showForm, setShowForm] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Assuming user ID and token are stored in localStorage after login
-    const userId = localStorage.getItem('userId');
-    const token = localStorage.getItem('token');
-
-    if (!userId || !token) {
-      console.error('User not logged in');
-      // Redirect to login or show an error
+  const fetchExerciseLogs = async () => {
+    if (!token || !userId) {
+      setError('User not authenticated');
+      setLoading(false);
       return;
     }
-
-    const exerciseData = {
-      user_id: userId,
-      type: newExercise.type,
-      duration: Number(newExercise.duration),
-      intensity: newExercise.intensity,
-      // calories: newExercise.calories ? Number(newExercise.calories) : undefined, // Calories handled by backend for now
-    };
-
-    fetch(`${API_BASE_URL}/log/exercise`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(exerciseData),
-    })
-      .then(response => response.json())
-      .then(data => {
-        if (data.status === 'succeeded') {
-          // Optionally fetch updated logs after successful submission
-          // For now, we'll just clear the form and potentially add a local entry for immediate feedback
-          const entry: ExerciseEntry = {
-            id: Date.now().toString(), // Temporary ID for local display
-            type: newExercise.type,
-            duration: Number(newExercise.duration),
-            intensity: newExercise.intensity,
-            calories: undefined, // Calories will come from backend if available later
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          };
-          setExercises([...exercises, entry]);
-          setNewExercise({ type: '', duration: '', intensity: 'moderate', calories: '' });
-          setShowForm(false);
-        } else {
-          console.error('Error logging exercise:', data.message);
-          // Show an error message to the user
-        }
-      })
-      .catch(error => {
-        console.error('Error logging exercise:', error);
-        // Show an error message to the user
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/logs?userId=${userId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
-
+      if (!response.ok) throw new Error('Failed to fetch exercise logs');
+      const data = await response.json();
+      setExerciseEntries(data.exercise_logs || []);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  useEffect(() => {
+    fetchExerciseLogs();
+  }, []);
 
-  const totalDuration = exercises.reduce((sum, ex) => sum + ex.duration, 0);
-  const totalCalories = exercises.reduce((sum, ex) => sum + (ex.calories || 0), 0);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/log/exercise`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          exercise_type: newExercise.type,
+          duration: parseInt(newExercise.duration, 10),
+          intensity: newExercise.intensity,
+        }),
+      });
+
+      if (response.ok) {
+        fetchExerciseLogs();
+      } else {
+        const data = await response.json();
+        setError(data.message || 'Failed to add exercise log');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An unexpected error occurred.');
+    } finally {
+      setLoading(false);
+      setNewExercise({ type: '', duration: '', intensity: 'moderate' });
+      setShowForm(false);
+    }
+  };
+
+  const deleteEntry = (id: string) => {
+    setExerciseEntries(exerciseEntries.filter(entry => entry.id !== id));
+  };
+
+  const totalMinutes = exerciseEntries.reduce((sum, entry) => sum + entry.duration, 0);
+  const totalCaloriesBurnt = exerciseEntries.reduce((sum, entry) => sum + entry.calories_burnt, 0);
 
   const getIntensityColor = (intensity: string) => {
     switch (intensity) {
@@ -120,200 +111,115 @@ const ExerciseLog = () => {
     { name: '10-min HIIT', duration: 10, intensity: 'high' as const }
   ];
 
-  // This function might need to be updated to call a backend delete endpoint
-  const deleteExercise = (id: string) => {
-    setExercises(exercises.filter(ex => ex.id !== id));
-  };
-
   const addQuickWorkout = (workout: typeof quickWorkouts[0]) => {
     const entry: ExerciseEntry = {
       id: Date.now().toString(),
-      type: workout.name,
+      exercise_type: workout.name,
       duration: workout.duration,
       intensity: workout.intensity,
-      calories: undefined, // Calories will come from backend if available later
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      calories_burnt: 0, // Calories will come from backend if available later
+      timestamp: new Date().toISOString()
     };
-    setExercises([...exercises, entry]);
+    setExerciseEntries([...exerciseEntries, entry]);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50">
       <Navigation />
-      
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-800 mb-2">Movement Journal 🏋️</h2>
-          <p className="text-gray-600">Every step counts on your fitness journey!</p>
-          
-          <div className="mt-4 grid grid-cols-2 gap-4 max-w-md mx-auto">
-            <div className="bg-white rounded-2xl shadow-lg p-4">
-              <p className="text-2xl font-bold text-purple-600">{totalDuration}</p>
-              <p className="text-sm text-gray-600">minutes today</p>
+      <main className="max-w-4xl mx-auto px-4 py-8">
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <Card className="text-center mb-8 p-6 shadow-xl bg-white/80 backdrop-blur-sm">
+            <h2 className="text-4xl font-bold text-gray-800 mb-2">Exercise Log 🏃‍♂️</h2>
+            <p className="text-gray-600">Celebrate your movement and progress!</p>
+            <div className="mt-4 bg-white rounded-2xl shadow-lg p-4 inline-block">
+              <p className="text-3xl font-bold text-pink-600">{totalMinutes} min</p>
+              <p className="text-sm text-gray-600">of exercise today</p>
             </div>
-            <div className="bg-white rounded-2xl shadow-lg p-4">
-              <p className="text-2xl font-bold text-pink-600">{totalCalories}</p>
-              <p className="text-sm text-gray-600">calories burned</p>
-            </div>
-          </div>
-        </div>
+          </Card>
+        </motion.div>
 
-        {/* Quick Workouts */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">Quick Start</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {quickWorkouts.map((workout, index) => (
-              <button
-                key={index}
-                onClick={() => addQuickWorkout(workout)}
-                className="bg-white border border-purple-200 rounded-xl p-4 hover:bg-purple-50 hover:border-purple-300 transition-all duration-200 text-left"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <Zap className="w-5 h-5 text-purple-500" />
-                  <span className={`px-2 py-1 rounded-full text-xs ${getIntensityColor(workout.intensity)}`}>
-                    {workout.intensity}
-                  </span>
-                </div>
-                <p className="font-medium text-gray-800">{workout.name}</p>
-                <p className="text-sm text-gray-600">{workout.duration} minutes</p>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Add Exercise Button */}
         <div className="mb-6 text-center">
-          <button
-            type="button"
-            onClick={() => setShowForm(!showForm)}
-            className="bg-gradient-to-r from-purple-400 to-purple-500 text-white px-6 py-3 rounded-xl hover:from-purple-500 hover:to-purple-600 transition-all duration-200 flex items-center space-x-2 mx-auto shadow-lg"
-          >
-            <Plus className="w-5 h-5" />
-            <span>Log Custom Exercise</span>
-          </button>
+          <Button onClick={() => setShowForm(!showForm)} size="lg" className="rounded-full shadow-lg">
+            <Plus className="w-5 h-5 mr-2" /> Add Exercise Entry
+          </Button>
         </div>
-        {/* Exercise Form */}
-        {showForm && (<div className="bg-white rounded-2xl shadow-lg border border-purple-100 p-6 mb-6 animate-fade-in">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Exercise Type</label>
-                  <input
+
+        {showForm && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} transition={{ duration: 0.3 }}>
+            <Card className="mb-6">
+              <CardHeader><CardTitle>Add New Exercise Entry</CardTitle></CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <Input
                     type="text"
                     value={newExercise.type}
                     onChange={(e) => setNewExercise({ ...newExercise, type: e.target.value })}
-                    className="w-full"
-                    placeholder="e.g., Running, Yoga, Weight Lifting"
+                    placeholder="Exercise type (e.g., Running, Yoga)"
                     required
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Duration (minutes)</label>
-                  <input
+                  <Input
                     type="number"
                     value={newExercise.duration}
                     onChange={(e) => setNewExercise({ ...newExercise, duration: e.target.value })}
-                    className="w-full"
-                    placeholder="30"
-                    min="1"
+                    placeholder="Duration (in minutes)"
                     required
                   />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Intensity</label>
-                  <select
+                  <Select
                     value={newExercise.intensity}
-                    onChange={(e) => setNewExercise({ ...newExercise, intensity: e.target.value as 'low' | 'moderate' | 'high' })}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400" // Added some minimal styling for select
+                    onValueChange={(value) => setNewExercise({ ...newExercise, intensity: value })}
                   >
-                    <option value="low">Low</option>
-                    <option value="moderate">Moderate</option>
-                    <option value="high">High</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Calories Burned (optional)</label>
-                  <input
-                    type="number"
-                    value={newExercise.calories}
-                    onChange={(e) => setNewExercise({ ...newExercise, calories: e.target.value })}
-                    className="w-full"
-                    placeholder="150"
-                    min="0"
-                  />
-                </div>
-              </div>
-              
-              <div className="flex space-x-3">
-                <button
-                  type="submit"
-                  className="flex-1" // Using Button component will handle styling
-                >
-                  Log Exercise
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  variant="outline" // Assuming 'outline' variant exists for your Button component
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
+                    <SelectTrigger><SelectValue placeholder="Select intensity" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="moderate">Moderate</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button type="submit" disabled={loading}>
+                    {loading ? 'Logging...' : 'Log Exercise'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </motion.div>
         )}
-        {/* Exercise Entries */}{/* Existing styling with divs will remain for now */}
+
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-800">Today's Activities</h3>
-          {exercises.map((exercise) => (
-            <div key={exercise.id} className="bg-white rounded-2xl shadow-lg border border-purple-100 p-6">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <h3 className="text-lg font-semibold text-gray-800">{exercise.type}</h3>
-                    <span className={`px-2 py-1 rounded-full text-xs ${getIntensityColor(exercise.intensity)}`}>
-                      {exercise.intensity}
-                    </span>
+          {loading && <p>Loading...</p>}
+          {error && <p className="text-red-500">{error}</p>}
+          {!loading && !error && exerciseEntries.map((entry, index) => (
+            <motion.div
+              key={entry.id}
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+            >
+              <Card className="flex items-center justify-between p-4 shadow-sm hover:shadow-md">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mr-4">
+                    <Zap className="w-6 h-6 text-pink-500" />
                   </div>
-                  
-                  <div className="flex items-center space-x-4 text-gray-600">
-                    <div className="flex items-center space-x-1">
-                      <Clock className="w-4 h-4" />
-                      <span>{exercise.duration} min</span>
-                    </div>
-                    {exercise.calories && (
-                      <div className="flex items-center space-x-1">
-                        <Zap className="w-4 h-4" />
-                        <span>{exercise.calories} cal</span>
-                      </div>
-                    )}
-                    <span className="text-sm">{exercise.time}</span>
+                  <div>
+                    <p className="font-semibold capitalize">{entry.exercise_type}</p>
+                    <p className="text-sm text-gray-500">{entry.duration} min • {entry.intensity}</p>
                   </div>
                 </div>
-                
-                <button 
-                  onClick={() => deleteExercise(exercise.id)}
-                  className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
+                <div className="flex items-center space-x-2">
+                  <p className="text-sm text-gray-500">{new Date(entry.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                  <Button variant="ghost" size="icon" onClick={() => deleteEntry(entry.id)}>
+                    <Trash2 className="w-5 h-5 text-gray-400 hover:text-red-500" />
+                  </Button>
+                </div>
+              </Card>
+            </motion.div>
           ))}
+          {!loading && exerciseEntries.length === 0 && (
+            <Card className="text-center p-8 border-dashed">
+              <p className="text-gray-500">No exercise logged today. Add an entry to get moving!</p>
+            </Card>
+          )}
         </div>
-
-        {/* Motivational Quote */}
-        <div className="mt-8 bg-gradient-to-r from-purple-400 to-purple-500 rounded-2xl shadow-lg p-6 text-white text-center">
-          <p className="text-lg font-medium mb-2">💪 Fitness Wisdom 💪</p>
-          <p className="text-sm opacity-90">
-            "The only bad workout is the one that didn't happen. You're amazing for showing up!"
-          </p>
-        </div>
-      </div>
+      </main>
     </div>
   );
 };

@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, User, Bot } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { API_BASE_URL } from '../config';
 
 interface Message {
   id: string;
@@ -40,7 +40,7 @@ const ChatInterface = () => {
       }
 
       try {
-        const response = await fetch(`/chat/history?user_id=${userId}`, {
+        const response = await fetch(`${API_BASE_URL}/chat/history?user_id=${userId}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -77,7 +77,7 @@ const ChatInterface = () => {
     }
 
     try {
-      const response = await fetch('/chat', {
+      const response = await fetch(`${API_BASE_URL}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

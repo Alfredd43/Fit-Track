@@ -1,218 +1,273 @@
-
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import Navigation from '../components/Navigation';
 import WellnessStats from '../components/WellnessStats';
-import MotivationalBanner from '../components/MotivationalBanner';
 import ChatInterface from '../components/ChatInterface';
-import WellnessTips from '../components/WellnessTips';
-import PageHeader from '../components/PageHeader';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
-
 import { Button } from "../components/ui/button";
-import { Plus } from "lucide-react";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import { Plus, Flame, Droplet, Zap } from "lucide-react";
+import { API_BASE_URL } from '../config';
 
 const Index = () => {
-  const [logs, setLogs] = useState<any>(null);
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // User & Profile State
+  const [userName, setUserName] = useState('');
+  const [streak, setStreak] = useState(0);
+  const [level, setLevel] = useState('Beginner');
+
+  // Daily Stats State
   const [totalCalories, setTotalCalories] = useState(0);
   const [totalWater, setTotalWater] = useState(0);
-  const [totalExerciseDuration, setTotalExerciseDuration] = useState(0);
+  const [totalCaloriesBurnt, setTotalCaloriesBurnt] = useState(0);
+
+  // Log State
+  const [foodLogs, setFoodLogs] = useState([]);
+  const [waterLogs, setWaterLogs] = useState([]);
+  const [exerciseLogs, setExerciseLogs] = useState([]);
+
+  // Modal State
+  const [showFoodModal, setShowFoodModal] = useState(false);
+  const [showWaterModal, setShowWaterModal] = useState(false);
+  const [showExerciseModal, setShowExerciseModal] = useState(false);
+
+  // Form State
+  const [foodForm, setFoodForm] = useState({ name: '', quantity: '' });
+  const [waterForm, setWaterForm] = useState({ amount: '' });
+  const [exerciseForm, setExerciseForm] = useState({ type: '', duration: '', intensity: 'moderate' });
+  const [formError, setFormError] = useState('');
+  const [formLoading, setFormLoading] = useState(false);
+
+  const fetchData = async () => {
+    setLoading(true);
+    const token = localStorage.getItem('token');
+    const userId = localStorage.getItem('user_id');
+
+    if (!token || !userId) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      const [logsResponse, profileResponse] = await Promise.all([
+        fetch(`${API_BASE_URL}/logs?userId=${userId}`, { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch(`${API_BASE_URL}/profile`, { headers: { 'Authorization': `Bearer ${token}` } })
+      ]);
+
+      if (logsResponse.ok) {
+        const logsData = await logsResponse.json();
+        setTotalCalories(logsData.total_calories || 0);
+        setTotalWater(logsData.total_water || 0);
+        setTotalCaloriesBurnt(logsData.total_calories_burnt || 0);
+        setFoodLogs(logsData.food_logs || []);
+        setWaterLogs(logsData.water_logs || []);
+        setExerciseLogs(logsData.exercise_logs || []);
+      }
+
+      if (profileResponse.ok) {
+        const profileData = await profileResponse.json();
+        setUserName(profileData.name || 'User');
+        setStreak(profileData.streak || 0);
+        setLevel(profileData.level || 'Beginner');
+      }
+    } catch (err) {
+      setError("Failed to load data. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchLogs = async () => {
-      const token = localStorage.getItem('token'); // Or from your state management
-      const userId = localStorage.getItem('userId'); // Or from your state management
-
-      if (!token || !userId) {
-        setError('User not authenticated');
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/logs?userId=${userId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        if (!response.ok) {
-          throw new Error('Failed to fetch logs');
-        }
-        const data = await response.json();
-        setLogs(data);
-
-        // Calculate statistics
-        let calories = 0;
-        if (data.foodLogs) {
-          calories = data.foodLogs.reduce((sum: number, log: any) => sum + (log.calories || 0), 0);
-        }
-        setTotalCalories(calories);
-
-        let waterVolume = 0;
-        if (data.waterLogs) {
-          waterVolume = data.waterLogs.reduce((sum: number, log: any) => sum + (log.volume || 0), 0);
-        }
-        setTotalWater(waterVolume);
-
-        let exerciseDuration = 0;
-        if (data.exerciseLogs) {
-          exerciseDuration = data.exerciseLogs.reduce((sum: number, log: any) => sum + (log.duration || 0), 0);
-        }
-        setTotalExerciseDuration(exerciseDuration);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchLogs();
+    fetchData();
   }, []);
 
-  if (loading) {
-    return <div className="text-center py-10">Loading logs...</div>;
-  }
-
-  if (error) {
-    return <div className="text-center py-10 text-red-500">Error: {error}</div>;
-  }
+  const handleLogSubmit = async (type: 'food' | 'water' | 'exercise', payload: any) => {
+    setFormLoading(true);
+    const token = localStorage.getItem('token');
+    const userId = localStorage.getItem('user_id');
+    try {
+      const response = await fetch(`${API_BASE_URL}/log/${type}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ user_id: userId, ...payload }),
+      });
+      if (response.ok) {
+        setShowFoodModal(false);
+        setShowWaterModal(false);
+        setShowExerciseModal(false);
+        fetchData(); // Refresh all data
+      } else {
+        const data = await response.json();
+        setFormError(data.message || `Failed to log ${type}.`);
+      }
+    } catch (err) {
+      setFormError(`An error occurred while logging ${type}.`);
+    } finally {
+      setFormLoading(false);
+    }
+  };
+  
+  if (loading) return <div>Loading...</div>
+  if (error) return <div>Error: {error}</div>
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-peach-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <Navigation />
-      
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        <PageHeader 
-          title="Chat with Fitness Bab 💬"
-          subtitle="Your caring wellness companion is here to listen and support you!"
-        />
-
-        <MotivationalBanner />
+      <main className="max-w-7xl mx-auto px-4 py-8">
         <WellnessStats
+          streak={streak}
+          goals={""}
+          wellness={0}
+          level={level}
+          userName={userName}
           totalCalories={totalCalories}
           totalWater={totalWater}
-          totalExerciseDuration={totalExerciseDuration}
+          totalCaloriesBurnt={totalCaloriesBurnt}
         />
 
-        {/* Quick Actions Section - Refactored */}
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="flex space-x-4">
-            {/* These buttons will likely navigate or open modals */}
-            <Button variant="outline" onClick={() => alert("Log Food Action")}>
-              <Plus className="mr-2 h-4 w-4" /> Log Food
-            </Button>
-            <Button variant="outline" onClick={() => alert("Log Water Action")}>
-              <Plus className="mr-2 h-4 w-4" /> Log Water
-            </Button>
-          </CardContent>
-        </Card>
-        <ChatInterface />
-
-        {logs && (
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+          {/* Left Column: Logs & Quick Actions */}
+          <motion.div 
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="lg:col-span-2 space-y-8"
+          >
             <Card>
-              <CardHeader>
-                <CardTitle>Food Logs</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
-              <CardContent>
-                {logs.foodLogs.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Item</TableHead>
-                        <TableHead>Quantity</TableHead>
-                        <TableHead>Calories</TableHead>
-                        <TableHead>Macros</TableHead>
-                        <TableHead>Time</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {logs.foodLogs.map((log: any) => (
-                        <TableRow key={log.id}>
-                          <TableCell>{log.food_item}</TableCell>
-                          <TableCell>{log.quantity}</TableCell>
-                          <TableCell>{log.calories}</TableCell>
-                          <TableCell>{log.macros}</TableCell>
-                          <TableCell>{new Date(log.timestamp).toLocaleString()}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                ) : (
-                  <p>No food logs yet.</p>
-                )}
+              <CardContent className="flex space-x-4">
+                <Button variant="outline" onClick={() => setShowFoodModal(true)}>
+                  <Flame className="mr-2 h-4 w-4" /> Log Food
+                </Button>
+                <Button variant="outline" onClick={() => setShowWaterModal(true)}>
+                  <Droplet className="mr-2 h-4 w-4" /> Log Water
+                </Button>
+                <Button variant="outline" onClick={() => setShowExerciseModal(true)}>
+                  <Zap className="mr-2 h-4 w-4" /> Log Exercise
+                </Button>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle>Water Logs</CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle>Today's Food Log</CardTitle></CardHeader>
               <CardContent>
-                {logs.waterLogs.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Volume (ml)</TableHead>
-                        <TableHead>Time</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {logs.waterLogs.map((log: any) => (
-                        <TableRow key={log.id}>
-                          <TableCell>{log.volume}</TableCell>
-                          <TableCell>{new Date(log.timestamp).toLocaleString()}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                ) : (
-                  <p>No water logs yet.</p>
-                )}
+                {foodLogs.length > 0 ? (
+                  foodLogs.map((log: any) => <p key={log.id}>{log.food_item}: {log.calories} kcal</p>)
+                ) : <p>No food logged today.</p>}
               </CardContent>
             </Card>
-
             <Card>
-              <CardHeader>
-                <CardTitle>Exercise Logs</CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle>Today's Water Log</CardTitle></CardHeader>
               <CardContent>
-                {logs.exerciseLogs.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Duration (mins)</TableHead>
-                        <TableHead>Intensity</TableHead>
-                        <TableHead>Time</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {logs.exerciseLogs.map((log: any) => (
-                        <TableRow key={log.id}>
-                          <TableCell>{log.exercise_type}</TableCell>
-                          <TableCell>{log.duration}</TableCell>
-                          <TableCell>{log.intensity}</TableCell>
-                          <TableCell>{new Date(log.timestamp).toLocaleString()}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                ) : (
-                  <p>No exercise logs yet.</p>
-                )}
+                {waterLogs.length > 0 ? (
+                  waterLogs.map((log: any) => <p key={log.id}>{log.volume} ml</p>)
+                ) : <p>No water logged today.</p>}
               </CardContent>
             </Card>
+            <Card>
+              <CardHeader><CardTitle>Today's Exercise Log</CardTitle></CardHeader>
+              <CardContent>
+                {exerciseLogs.length > 0 ? (
+                  exerciseLogs.map((log: any) => <p key={log.id}>{log.exercise_type} - {log.duration} mins</p>)
+                ) : <p>No exercise logged today.</p>}
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Right Column: Chat */}
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="relative"
+          >
+            <Card className="sticky top-24">
+              <CardHeader><CardTitle>Chat with Bab</CardTitle></CardHeader>
+              <CardContent>
+                <ChatInterface />
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+
+        {/* Modals for logging */}
+        {/* Food Modal */}
+        {showFoodModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+              <h2 className="text-xl font-bold mb-4">Log Food</h2>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                handleLogSubmit('food', { food_item: `${foodForm.quantity} of ${foodForm.name}` });
+              }}>
+                <Label>Food Name</Label>
+                <Input value={foodForm.name} onChange={e => setFoodForm(f => ({ ...f, name: e.target.value }))} required />
+                <Label>Quantity</Label>
+                <Input value={foodForm.quantity} onChange={e => setFoodForm(f => ({ ...f, quantity: e.target.value }))} />
+                <Button type="submit" disabled={formLoading}>{formLoading ? 'Logging...' : 'Log'}</Button>
+                <Button type="button" onClick={() => setShowFoodModal(false)}>Cancel</Button>
+              </form>
+            </div>
           </div>
         )}
-
-        <WellnessTips />
-      </div>
+        {/* Water Modal */}
+        {showWaterModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+              <h2 className="text-xl font-bold mb-4">Log Water</h2>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                handleLogSubmit('water', { volume: parseInt(waterForm.amount, 10) });
+              }}>
+                <Label>Amount (ml)</Label>
+                <Input type="number" value={waterForm.amount} onChange={e => setWaterForm(f => ({ ...f, amount: e.target.value }))} required />
+                <Button type="submit" disabled={formLoading}>{formLoading ? 'Logging...' : 'Log'}</Button>
+                <Button type="button" onClick={() => setShowWaterModal(false)}>Cancel</Button>
+              </form>
+            </div>
+          </div>
+        )}
+        {/* Exercise Modal */}
+        {showExerciseModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+              <h2 className="text-xl font-bold mb-4">Log Exercise</h2>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                handleLogSubmit('exercise', { 
+                  exercise_type: exerciseForm.type,
+                  duration: parseInt(exerciseForm.duration, 10),
+                  intensity: exerciseForm.intensity
+                });
+              }}>
+                <Label>Type</Label>
+                <Input value={exerciseForm.type} onChange={e => setExerciseForm(f => ({...f, type: e.target.value}))} required />
+                <Label>Duration (mins)</Label>
+                <Input type="number" value={exerciseForm.duration} onChange={e => setExerciseForm(f => ({...f, duration: e.target.value}))} required />
+                <Label>Intensity</Label>
+                <Select value={exerciseForm.intensity} onValueChange={val => setExerciseForm(f => ({ ...f, intensity: val }))}>
+                  <SelectTrigger><SelectValue/></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="moderate">Moderate</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button type="submit" disabled={formLoading}>{formLoading ? 'Logging...' : 'Log'}</Button>
+                <Button type="button" onClick={() => setShowExerciseModal(false)}>Cancel</Button>
+              </form>
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 };

@@ -1,59 +1,92 @@
-
 import React from 'react';
-import { Calendar, Target, Heart, Award } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Calendar, Target, Heart, Award, Droplet, Flame, Zap } from 'lucide-react';
 
-const WellnessStats = () => {
-  // Mock data - in a real app this would come from your API
-  const stats = [
+interface WellnessStatsProps {
+  streak: number;
+  goals: string;
+  wellness: number;
+  level: string;
+  userName: string;
+  totalCalories: number;
+  totalWater: number;
+  totalCaloriesBurnt: number;
+}
+
+const StatCard = ({ icon: Icon, label, value, unit, color, bgColor, delay }: any) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5, delay }}
+    className={`p-4 rounded-2xl shadow-lg flex flex-col items-center justify-center text-center ${bgColor}`}
+  >
+    <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 bg-white/50`}>
+      <Icon className={`w-6 h-6 ${color}`} />
+    </div>
+    <p className={`text-2xl font-bold ${color}`}>{value}</p>
+    <p className="text-sm font-medium text-gray-700">{label}</p>
+    <p className="text-xs text-gray-500">{unit}</p>
+  </motion.div>
+);
+
+const WellnessStats: React.FC<WellnessStatsProps> = ({
+  streak,
+  goals,
+  wellness,
+  level,
+  userName,
+  totalCalories,
+  totalWater,
+  totalCaloriesBurnt,
+}) => {
+  const mainStats = [
+    {
+      icon: Flame,
+      label: 'Calories In',
+      value: totalCalories,
+      unit: 'kcal',
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-100',
+    },
+    {
+      icon: Zap,
+      label: 'Calories Out',
+      value: totalCaloriesBurnt,
+      unit: 'kcal',
+      color: 'text-pink-600',
+      bgColor: 'bg-pink-100',
+    },
+    {
+      icon: Droplet,
+      label: 'Water Intake',
+      value: totalWater,
+      unit: 'ml',
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-100',
+    },
     {
       icon: Calendar,
       label: 'Streak',
-      value: '7',
+      value: streak,
       unit: 'days',
       color: 'text-green-600',
-      bgColor: 'bg-green-50'
+      bgColor: 'bg-green-100',
     },
-    {
-      icon: Target,
-      label: 'Goals',
-      value: '3/5',
-      unit: 'today',
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50'
-    },
-    {
-      icon: Heart,
-      label: 'Wellness',
-      value: '85',
-      unit: 'score',
-      color: 'text-pink-600',
-      bgColor: 'bg-pink-50'
-    },
-    {
-      icon: Award,
-      label: 'Level',
-      value: '12',
-      unit: 'beginner',
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50'
-    }
   ];
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-green-100 p-6 mb-8">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">
-        Your Wellness Journey ✨
-      </h3>
+    <div className="p-6 mb-8 bg-white rounded-3xl shadow-md border border-gray-100">
+      <motion.h3 
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="text-2xl font-bold text-gray-800 mb-4 text-center"
+      >
+        Welcome, {userName}! Here's your daily summary ✨
+      </motion.h3>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {stats.map((stat, index) => (
-          <div key={index} className="text-center">
-            <div className={`w-12 h-12 ${stat.bgColor} rounded-full flex items-center justify-center mx-auto mb-2`}>
-              <stat.icon className={`w-6 h-6 ${stat.color}`} />
-            </div>
-            <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
-            <p className="text-xs text-gray-600">{stat.unit}</p>
-            <p className="text-sm font-medium text-gray-800 mt-1">{stat.label}</p>
-          </div>
+        {mainStats.map((stat, index) => (
+          <StatCard key={stat.label} {...stat} delay={index * 0.1} />
         ))}
       </div>
     </div>

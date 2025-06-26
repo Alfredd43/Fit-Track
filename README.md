@@ -60,6 +60,44 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## How do I run the backend (Flask API)?
+
+1. **Install Python dependencies:**
+   ```sh
+   pip install -r requirements.txt
+   ```
+2. **Create a `.env` file:**
+   - Copy the following into a new file named `.env` in the project root:
+     ```
+     OPENAI_API_KEY=your-openai-api-key-here
+     ```
+   - Replace `your-openai-api-key-here` with your actual OpenAI API key.
+3. **Initialize the database:**
+   - The database tables will be created automatically when you first run the backend.
+4. **Run the backend server:**
+   ```sh
+   python app.py
+   ```
+   - The backend will start on `http://localhost:5000` by default.
+
+## How do I run the frontend (React app)?
+
+1. **Install Node.js dependencies:**
+   ```sh
+   npm install
+   ```
+2. **Start the frontend dev server:**
+   ```sh
+   npm run dev
+   ```
+   - The frontend will start on `http://localhost:5173` by default.
+   - It will connect to the backend at `http://localhost:5000` (see `src/config.ts`).
+
+## Troubleshooting
+- Make sure your backend is running before using the frontend.
+- If you change the backend port, update `src/config.ts` accordingly.
+- Ensure your `.env` file is present and correct for the backend.
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/472afe8c-6d79-49be-9bc0-863cf87c780e) and click on Share -> Publish.
