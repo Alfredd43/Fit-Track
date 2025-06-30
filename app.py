@@ -10,8 +10,11 @@ import json
 import secrets
 from functools import wraps
 import google.generativeai as genai
+import cohere
 
 load_dotenv()
+COHERE_API_KEY = os.environ.get('COHERE_API_KEY')
+cohere_client = cohere.Client(COHERE_API_KEY) if COHERE_API_KEY else None
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
@@ -252,12 +255,27 @@ def get_logs(user_id):
     })
 
 def extract_nutrition_info(food_item):
-    # Try OpenAI first
+    concise_instruction = "Respond in 2 sentences or less. Be concise and to the point."
+    # Try Cohere first
+    if cohere_client:
+        try:
+            prompt = f"Extract calorie and macro information (protein, carbs, fats) from the following food item description and return it as a JSON object. {concise_instruction} If information is not available, use null. Example: {{'calories': 200, 'protein': 10, 'carbs': 20, 'fat': 5}}\nFood: {food_item}"
+            response = cohere_client.generate(
+                model="command-r-plus",
+                prompt=prompt,
+                max_tokens=100,
+                temperature=0.2
+            )
+            nutrition_text = response.generations[0].text.strip()
+            return json.loads(nutrition_text)
+        except Exception as ce:
+            print(f"Cohere nutrition info failed: {ce}")
+    # Try OpenAI next
     try:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "Extract calorie and macro information (protein, carbs, fats) from the following food item description and return it as a JSON object. If information is not available, use null. Example: {'calories': 200, 'protein': 10, 'carbs': 20, 'fats': 5}"},
+                {"role": "system", "content": f"Extract calorie and macro information (protein, carbs, fats) from the following food item description and return it as a JSON object. {concise_instruction} If information is not available, use null. Example: {{'calories': 200, 'protein': 10, 'carbs': 20, 'fat': 5}}"},
                 {"role": "user", "content": food_item}
             ]
         )
@@ -268,13 +286,13 @@ def extract_nutrition_info(food_item):
         # Try Google Gemini as fallback
         try:
             model = genai.GenerativeModel('gemini-1.5-pro')
-            prompt = f"Extract calorie and macro information (protein, carbs, fats) from the following food item description and return it as a JSON object. If information is not available, use null. Example: {{'calories': 200, 'protein': 10, 'carbs': 20, 'fats': 5}}\nFood: {food_item}"
+            prompt = f"Extract calorie and macro information (protein, carbs, fats) from the following food item description and return it as a JSON object. {concise_instruction} If information is not available, use null. Example: {{'calories': 200, 'protein': 10, 'carbs': 20, 'fat': 5}}\nFood: {food_item}"
             response = model.generate_content(prompt)
             nutrition_text = response.text.strip()
             return json.loads(nutrition_text)
         except Exception as ge:
             print(f"Gemini nutrition info failed: {ge}")
-            return {"error": f"OpenAI error: {e}; Gemini error: {ge}"}
+            return {"error": f"Cohere error; OpenAI error: {e}; Gemini error: {ge}"}
 
 # Default fallback responses for common gym-goer questions
 GYM_FAQ_FALLBACKS = [
@@ -295,30 +313,42 @@ GYM_FAQ_FALLBACKS = [
 def chat_with_ai(user_id):
     data = request.get_json()
     user_message = data['user_message']
-
-    # Try OpenAI first
+    concise_instruction = "Respond in 2 sentences or less. Be concise and to the point."
+    # Try Cohere first
+    if cohere_client:
+        try:
+            response = cohere_client.chat(
+                model="command-r-plus",
+                message=f"{user_message}\n{concise_instruction}",
+                temperature=0.5
+            )
+            ai_reply = response.text.strip()
+            new_interaction = AIInteraction(user_id=user_id, user_message=user_message, ai_reply=ai_reply)
+            db.session.add(new_interaction)
+            db.session.commit()
+            return jsonify({'ai_reply': ai_reply})
+        except Exception as ce:
+            print(f"Cohere chat failed: {ce}")
+    # Try OpenAI next
     try:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are a helpful wellness coach."},
+                {"role": "system", "content": f"You are a helpful wellness coach. {concise_instruction}"},
                 {"role": "user", "content": user_message}
             ]
         )
         ai_reply = response.choices[0].message['content'].strip()
-
         new_interaction = AIInteraction(user_id=user_id, user_message=user_message, ai_reply=ai_reply)
         db.session.add(new_interaction)
         db.session.commit()
-
         return jsonify({'ai_reply': ai_reply})
-
     except Exception as e:
         print(f"OpenAI chat failed: {e}")
         # Try Google Gemini as fallback
         try:
             model = genai.GenerativeModel('gemini-1.5-pro')
-            prompt = f"You are a helpful wellness coach.\nUser: {user_message}"
+            prompt = f"You are a helpful wellness coach. {concise_instruction}\nUser: {user_message}"
             response = model.generate_content(prompt)
             ai_reply = response.text.strip()
             new_interaction = AIInteraction(user_id=user_id, user_message=user_message, ai_reply=ai_reply)

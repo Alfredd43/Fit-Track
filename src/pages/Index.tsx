@@ -11,6 +11,7 @@ import { Label } from "../components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Plus, Flame, Droplet, Zap } from "lucide-react";
 import { API_BASE_URL } from '../config';
+import MotivationalBanner from '../components/MotivationalBanner';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -43,6 +44,8 @@ const Index = () => {
   const [exerciseForm, setExerciseForm] = useState({ type: '', duration: '', intensity: 'moderate' });
   const [formError, setFormError] = useState('');
   const [formLoading, setFormLoading] = useState(false);
+
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -101,6 +104,8 @@ const Index = () => {
         setShowFoodModal(false);
         setShowWaterModal(false);
         setShowExerciseModal(false);
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 1800);
         fetchData(); // Refresh all data
       } else {
         const data = await response.json();
@@ -117,9 +122,21 @@ const Index = () => {
   if (error) return <div>Error: {error}</div>
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen animated-gradient">
+      {showConfetti && <div className="confetti">
+        {[...Array(40)].map((_, i) => (
+          <span key={i} style={{
+            position: 'absolute',
+            left: `${Math.random() * 100}%`,
+            animationDelay: `${Math.random()}s`,
+            fontSize: `${Math.random() * 1.5 + 1}rem`,
+            color: ["#f472b6","#a5b4fc","#6ee7b7","#fbbf24","#f0abfc"][i%5]
+          }}>🎉</span>
+        ))}
+      </div>}
       <Navigation />
       <main className="max-w-7xl mx-auto px-4 py-8">
+        <MotivationalBanner />
         <WellnessStats
           streak={streak}
           goals={""}
@@ -139,47 +156,47 @@ const Index = () => {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="lg:col-span-2 space-y-8"
           >
-            <Card>
+            <div className="card-energetic">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="flex space-x-4">
-                <Button variant="outline" onClick={() => setShowFoodModal(true)}>
+                <button className="button-energetic" onClick={() => setShowFoodModal(true)}>
                   <Flame className="mr-2 h-4 w-4" /> Log Food
-                </Button>
-                <Button variant="outline" onClick={() => setShowWaterModal(true)}>
+                </button>
+                <button className="button-energetic" onClick={() => setShowWaterModal(true)}>
                   <Droplet className="mr-2 h-4 w-4" /> Log Water
-                </Button>
-                <Button variant="outline" onClick={() => setShowExerciseModal(true)}>
+                </button>
+                <button className="button-energetic" onClick={() => setShowExerciseModal(true)}>
                   <Zap className="mr-2 h-4 w-4" /> Log Exercise
-                </Button>
+                </button>
               </CardContent>
-            </Card>
+            </div>
 
-            <Card>
+            <div className="card-energetic">
               <CardHeader><CardTitle>Today's Food Log</CardTitle></CardHeader>
               <CardContent>
                 {foodLogs.length > 0 ? (
                   foodLogs.map((log: any) => <p key={log.id}>{log.food_item}: {log.calories} kcal</p>)
                 ) : <p>No food logged today.</p>}
               </CardContent>
-            </Card>
-            <Card>
+            </div>
+            <div className="card-energetic">
               <CardHeader><CardTitle>Today's Water Log</CardTitle></CardHeader>
               <CardContent>
                 {waterLogs.length > 0 ? (
                   waterLogs.map((log: any) => <p key={log.id}>{log.volume} ml</p>)
                 ) : <p>No water logged today.</p>}
               </CardContent>
-            </Card>
-            <Card>
+            </div>
+            <div className="card-energetic">
               <CardHeader><CardTitle>Today's Exercise Log</CardTitle></CardHeader>
               <CardContent>
                 {exerciseLogs.length > 0 ? (
                   exerciseLogs.map((log: any) => <p key={log.id}>{log.exercise_type} - {log.duration} mins</p>)
                 ) : <p>No exercise logged today.</p>}
               </CardContent>
-            </Card>
+            </div>
           </motion.div>
 
           {/* Right Column: Chat */}
@@ -189,12 +206,12 @@ const Index = () => {
             transition={{ duration: 0.5, delay: 0.4 }}
             className="relative"
           >
-            <Card className="sticky top-24">
+            <div className="card-energetic sticky top-24">
               <CardHeader><CardTitle>Chat with Bab</CardTitle></CardHeader>
               <CardContent>
                 <ChatInterface />
               </CardContent>
-            </Card>
+            </div>
           </motion.div>
         </div>
 

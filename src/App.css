@@ -49,6 +49,9 @@
 
 body {
   font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 50%, #f0abfc 100%);
+  min-height: 100vh;
+  transition: background 0.6s cubic-bezier(0.4,0,0.2,1);
 }
 
 #root {
@@ -92,4 +95,54 @@ body {
 
 .read-the-docs {
   color: #888;
+}
+
+.animated-gradient {
+  background: linear-gradient(270deg, #f0abfc, #a5b4fc, #6ee7b7, #f472b6, #f0abfc);
+  background-size: 1200% 1200%;
+  animation: gradientMove 12s ease-in-out infinite;
+}
+
+@keyframes gradientMove {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.confetti {
+  pointer-events: none;
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  z-index: 9999;
+  animation: confetti-fall 2s ease-in;
+}
+
+@keyframes confetti-fall {
+  0% { opacity: 0; transform: translateY(-100px); }
+  10% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(100vh); }
+}
+
+.button-energetic {
+  background: linear-gradient(90deg, #f472b6 0%, #a5b4fc 100%);
+  color: #fff;
+  border: none;
+  border-radius: 9999px;
+  box-shadow: 0 2px 8px 0 #f472b633;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.button-energetic:hover {
+  transform: scale(1.07) rotate(-2deg);
+  box-shadow: 0 4px 16px 0 #a5b4fc55;
+}
+
+.card-energetic {
+  background: linear-gradient(120deg, #f0abfc 0%, #a5b4fc 100%);
+  color: #fff;
+  border-radius: 1.5rem;
+  box-shadow: 0 4px 24px 0 #f0abfc33;
+  transition: box-shadow 0.3s;
+}
+.card-energetic:hover {
+  box-shadow: 0 8px 32px 0 #a5b4fc55;
 }

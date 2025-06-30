@@ -115,4 +115,14 @@ Feel free to use, modify, and distribute as needed.
 
 ---
 
+## Environment Variables
+
+Add the following to your `.env` file in the project root:
+
+```
+COHERE_API_KEY=your-cohere-api-key-here
+```
+
+---
+
 <p align="center">Made with wellness, joy, and a touch of Tailwind ✨</p>

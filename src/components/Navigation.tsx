@@ -22,7 +22,7 @@ const Navigation = () => {
               <span className="text-white text-lg font-bold">B</span>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-800">BuddyBliss</h1>
+              <h1 className="text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 font-mono tracking-tight">BuddyBliss</h1>
               <p className="text-xs text-gray-500">Your wellness companion</p>
             </div>
           </div>
@@ -34,14 +34,15 @@ const Navigation = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 text-sm font-medium ${
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 text-sm font-medium relative overflow-hidden ${
                     isActive
-                      ? 'bg-gray-100 text-gray-900 shadow-sm'
-                      : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
+                      ? 'bg-gradient-to-r from-pink-100 to-blue-100 text-gray-900 shadow-sm font-bold'
+                      : 'text-gray-500 hover:text-gray-900 hover:bg-gradient-to-r hover:from-pink-50 hover:to-blue-50'
                   }`}
                 >
                   <item.icon className="w-4 h-4" />
                   <span>{item.label}</span>
+                  {isActive && <span className="absolute left-2 right-2 bottom-1 h-1 bg-gradient-to-r from-pink-400 to-blue-400 rounded-full animate-pulse" />}
                 </Link>
               );
             })}

@@ -18,7 +18,8 @@ const StatCard = ({ icon: Icon, label, value, unit, color, bgColor, delay }: any
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5, delay }}
-    className={`p-4 rounded-2xl shadow-lg flex flex-col items-center justify-center text-center ${bgColor}`}
+    className={`p-4 card-energetic shadow-lg flex flex-col items-center justify-center text-center hover:animate-bounce bg-white`}
+    whileHover={{ scale: 1.07 }}
   >
     <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 bg-white/50`}>
       <Icon className={`w-6 h-6 ${color}`} />
@@ -80,7 +81,7 @@ const WellnessStats: React.FC<WellnessStatsProps> = ({
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="text-2xl font-bold text-gray-800 mb-4 text-center"
+        className="text-2xl font-bold text-gray-800 mb-4 text-center font-mono drop-shadow-lg"
       >
         Welcome, {userName}! Here's your daily summary ✨
       </motion.h3>
