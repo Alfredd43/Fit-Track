@@ -17,7 +17,16 @@ COHERE_API_KEY = os.environ.get('COHERE_API_KEY')
 cohere_client = cohere.Client(COHERE_API_KEY) if COHERE_API_KEY else None
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+
+# --- AWS RDS/Cloud DB Support ---
+# Set AWS_RDS_URI in your .env for production, fallback to SQLite for local dev
+aws_rds_uri = os.environ.get('AWS_RDS_URI')
+if aws_rds_uri:
+    app.config['SQLALCHEMY_DATABASE_URI'] = aws_rds_uri
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+# --- End AWS RDS/Cloud DB Support ---
+
 db = SQLAlchemy(app)
 CORS(app, supports_credentials=True)
 
