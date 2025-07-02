@@ -126,4 +126,9 @@ COHERE_API_KEY=your-cohere-api-key-here
 ---
 
 <p align="center">Made with wellness, joy, and a touch of Tailwind ✨</p>
-blah
+
+flask
+gunicorn
+flask_sqlalchemy
+flask_cors
+# add any other packages you use
