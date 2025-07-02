@@ -418,9 +418,10 @@ def update_profile(user_id):
     db.session.commit()
     return jsonify({'message': 'Profile updated successfully!'})
 
+openai.api_key = os.getenv("OPENAI_API_KEY")
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+with app.app_context():
+    db.create_all()
+
 if __name__ == '__main__':
-    openai.api_key = os.getenv("OPENAI_API_KEY")
-    genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-    with app.app_context():
-        db.create_all()
     app.run(debug=True)
