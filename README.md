@@ -1,4 +1,4 @@
-<h1 align="center">🌈 BuddyBliss</h1>
+<h1 align="center"> BuddyBliss</h1>
 
 <p align="center">
   <b>Your all-in-one wellness companion</b><br>
