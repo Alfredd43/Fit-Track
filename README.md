@@ -1,134 +1,109 @@
-<h1 align="center">🏃‍♀️ Fit-Track</h1>
+# 🍼 Bab Buddy Bliss
 
-<p align="center">
-  <b>A modern wellness and fitness tracker with AI-powered visual guidance</b><br>
-  💬 Interactive anatomy-based workouts | ⚙️ Flask + Vite + Tailwind CSS | 🌸 SQLite-backed progress tracking
-</p>
+A wellness and fitness tracker for nutrition, hydration, and exercise, with a modern UI and AI-powered chat.
 
 ---
 
-## ✨ Overview
+## ✨ Features
 
-**Fit-Track** is a beautiful and beginner-friendly full-stack application designed for wellness and workout tracking. It features:
-
-- ✅ AI-guided exercise visuals with transition steps  
-- ✅ Personalized fitness + wellness tracking  
-- ✅ SQLite-powered backend using Flask  
-- ✅ Responsive and stylish frontend built with Tailwind CSS and Vite  
-- ✅ Interactive body-based exercise exploration *(coming soon)*
-
----
-
-## 🚀 Features
-
-- 🧍 **Body Part Targeting** – Select a body part and view AI-suggested exercises *(planned)*
-- 📊 **Track Fitness + Food** – Simple interface for managing your daily health habits
-- 🎨 **Responsive UI** – Clean and fast user experience with Tailwind CSS
-- 🔐 **Authentication** – User registration and secure login system
-- 🧠 **AI Visual Transitions** – Step-by-step exercise images to guide workouts
-- 💾 **Local Database** – Lightweight, embedded SQLite database for storing data
+- **Food Logging:** Track what you eat, calories, and macros.
+- **Water Tracking:** Log water intake, visualize daily hydration progress.
+- **Exercise Logging:** Record workouts, duration, intensity, and calories burnt.
+- **Wellness Dashboard:** See daily stats, streaks, and motivational banners.
+- **AI Chat:** Get wellness tips and encouragement via integrated AI chat.
+- **Authentication:** Register/login with secure token-based auth.
+- **Responsive UI:** Built with React, TypeScript, Tailwind, and shadcn/ui.
+- **Backend:** Flask API with SQLite (or AWS RDS) and nutrition lookup.
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Layer       | Technology          |
-|-------------|---------------------|
-| 🧠 Backend  | Flask (Python)      |
-| ⚙️ Frontend | Vite + TypeScript   |
-| 🎨 Styling  | Tailwind CSS        |
-| 🗃️ Database | SQLite (via Flask)  |
-| 📦 Tools    | npm, Python venv    |
+| Layer       | Technology                |
+|-------------|--------------------------|
+| Backend     | Flask (Python), SQLAlchemy, Flask-CORS |
+| Frontend    | React, TypeScript, Vite, Tailwind CSS, shadcn/ui |
+| Database    | SQLite (local) or AWS RDS |
+| AI/LLM      | OpenAI, Cohere, Google Generative AI |
+| Auth        | Token-based (in-memory)   |
 
 ---
 
 ## 📁 Project Structure
 
 ```
-fit-track-main/
-├── app.py                # Flask backend logic
-├── src/                  # Frontend source code (TypeScript + Tailwind CSS)
-├── public/               # Static assets like favicon, robots.txt
-├── instance/
-│   └── site.db           # Local SQLite database file
+bab-buddy-bliss-1/
+├── app.py                # Flask backend API
 ├── requirements.txt      # Python backend dependencies
-├── package.json          # npm frontend configuration
-├── tailwind.config.ts    # Tailwind CSS configuration
-└── vite.config.ts        # Vite bundler configuration
+├── src/
+│   ├── App.tsx           # Main React app
+│   ├── pages/            # FoodLog, WaterLog, ExerciseLog, Exercises, etc.
+│   ├── components/       # Navigation, ChatInterface, WellnessStats, etc.
+│   └── ...               # UI primitives, hooks, assets
+├── public/               # Static assets
+├── instance/site.db      # SQLite database
+├── package.json          # Frontend dependencies/scripts
+├── tailwind.config.ts    # Tailwind CSS config
+├── vite.config.ts        # Vite config
+└── README.md             # This file
 ```
 
 ---
 
 ## 🚀 Getting Started
 
-### 🐍 Backend (Flask)
+### Backend (Flask)
 
 ```bash
-# Create virtual environment
 python -m venv venv
-# Activate (Windows)
-venv\Scripts\activate
-# Or (Linux/macOS)
-source venv/bin/activate
-
-# Install dependencies
+venv\Scripts\activate  # On Windows
 pip install -r requirements.txt
-
-# Run Flask server
 python app.py
 ```
 
-### 💻 Frontend (Vite + Tailwind CSS)
+### Frontend (Vite + React)
 
 ```bash
-# Install frontend dependencies
 npm install
-
-# Start development server
 npm run dev
 ```
 
-Ensure both backend and frontend servers are running for full functionality.
+---
+
+## 🔑 Environment Variables
+
+Create a `.env` file in the root with:
+
+```
+COHERE_API_KEY=your-cohere-api-key
+OPENAI_API_KEY=your-openai-api-key
+GOOGLE_API_KEY=your-google-api-key
+AWS_RDS_URI=your-aws-rds-uri  # (optional, for production)
+```
 
 ---
 
-## 🔮 Future Additions
+## 🧩 Notable Components
 
-- 🧠 AI-generated motivational messages  
-- 🏋️‍♂️ Clickable human anatomy exercise flow  
-- 🧘‍♂️ Mood & meditation journal  
-- 📱 Mobile PWA (Progressive Web App) support  
+- `ChatInterface`: AI-powered chat for wellness tips.
+- `WellnessStats`: Dashboard for streaks, calories, water, etc.
+- `MotivationalBanner`: Rotating motivational messages.
+- `Navigation`: Main app navigation.
+- `ui/`: Modern, accessible UI primitives (shadcn/ui).
 
 ---
 
-## 🤝 Contributions
+## 🗺️ Main Pages
 
-We welcome contributions!  
-Feel free to fork the repository, create a new branch, make your changes, and submit a pull request.
+- `/` – Dashboard (overview, quick log, stats)
+- `/food-log` – Food journal
+- `/water-log` – Water intake tracker
+- `/exercise-log` – Exercise journal
+- `/exercises` – Browse exercises by muscle group
+- `/login`, `/register` – Auth
 
 ---
 
 ## 📄 License
 
-This project is licensed under the **MIT License**.  
-Feel free to use, modify, and distribute as needed.
-
----
-
-## Environment Variables
-
-Add the following to your `.env` file in the project root:
-
-```
-COHERE_API_KEY=your-cohere-api-key-here
-```
-
----
-
-<p align="center">Made with wellness, joy, and a touch of Tailwind ✨</p>
-
-flask
-gunicorn
-flask_sqlalchemy
-flask_cors
-# add any other packages you use
+MIT
