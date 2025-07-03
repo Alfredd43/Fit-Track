@@ -1,4 +1,4 @@
-# 🌈 BuddyBliss
+#  BuddyBliss
 
 Your all-in-one wellness companion: track food, water, workouts, and chat with AI—all in a beautiful, modern app.
 
@@ -97,11 +97,6 @@ AWS_RDS_URI=your-aws-rds-uri  # (optional, for production)
 - `/exercise` – Exercise journal
 - `/exercises` – Browse exercises by muscle group
 - `/login`, `/register` – Auth
-
----
-
-## 📄 License
-MIT
 
 ---
 
