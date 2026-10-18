@@ -24,3 +24,18 @@ dist-ssr
 *.sw?
 
 .env
+
+# Python virtual environment
+venv/
+__pycache__/
+
+# Secrets (keep .env.example tracked)
+.env
+.env.*
+!.env.example
+
+# Local databases
+instance/
+*.db
+*.sqlite
+*.sqlite3
